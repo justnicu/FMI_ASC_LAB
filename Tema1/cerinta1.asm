@@ -9,6 +9,8 @@
 
   idx: .long 0
 
+  zece: .long 10
+
 .text
 
 # Read the input (hexCode)
@@ -168,21 +170,40 @@ zero:
   inc %edx
   ret
 
-# Break the digits loop
+# Break the reverseDigits loop
 exitDigits:
+  movb $32, (%esi, %edx, 1)
+  inc %edx
   ret
+
+# WIP
+reverseDigits:
+  mov idx, %edx
+  popl %ebx
+  cmp $0, %ebx
+  je exitDigits
+  movb %bl, (%esi, %edx, 1)
+  inc %edx
+  mov %edx, idx
+  jmp reverseDigits
 
 # Take the digits of the integer and pushes their ascii encoding on the stack
 digits:
   cmp $0, %eax
-  je exitDigits
+  je reverseDigits
+  xor %edx, %edx
+  divl zece
+  add $48, %edx # '0' = 48
+  pushl %edx
+  jmp digits
 
-
-# WIP
+# Takes the digits of the number (found in %eax) then converts them into their ascii representation and puts them in the output
 integer:
   call encodedOp
   cmp $0, %eax
   je zero
+  mov %edx, idx
+  push $0
   jmp digits
 
 # Establish the operation type
