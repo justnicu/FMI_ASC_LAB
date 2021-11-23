@@ -176,7 +176,7 @@ exitDigits:
   inc %edx
   ret
 
-# WIP
+# Takes the ascii values of the number that were put on the stack and puts them in the ouput
 reverseDigits:
   mov idx, %edx
   popl %ebx
