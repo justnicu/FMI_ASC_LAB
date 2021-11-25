@@ -30,6 +30,11 @@ let:
   pushl returnMemoryAddress
   ret
 
+# WIP
+variable:
+  pushl returnMemoryAddress
+  ret
+
 # Takes the first 2 numbers in the stack, computes their sum and pushes it onto the stack
 add:
   popl %ebx
@@ -94,9 +99,8 @@ integer:
   mov currInstruction, %edi
   jmp nextDigit
 
-# Converts the instruction to a decimal value
+# Converts the %ebx th character of the the instruction to a decimal value
 instructionToDec:
-  xor %ebx, %ebx
   movb (%eax, %ebx, 1), %bl
   movl %ebx, %eax
   ret
@@ -105,6 +109,18 @@ instructionToDec:
 execute:
   popl returnMemoryAddress
   movl currInstruction, %eax
+  xor %ebx, %ebx
+  call instructionToDec
+  cmp $97, %eax # if less than 'a' = 97 than it is an integer
+  jl integer
+  movl currInstruction, %eax
+  xor %ebx, %ebx
+  inc %ebx
+  call instructionToDec
+  cmp $0, %eax # only one letter means it is a variable
+  je variable
+  movl currInstruction, %eax
+  xor %ebx, %ebx
   call instructionToDec
   cmp $108, %eax # 'l' = 108
   je let
@@ -116,7 +132,6 @@ execute:
   je mul
   cmp $100, %eax # 'd' = 100
   je div
-  jmp integer
 
 # Takes the next instruction and puts it into currInstruction
 nextInstruction:
