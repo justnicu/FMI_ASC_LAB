@@ -11,8 +11,10 @@
 
   returnMemoryAddress: .long 0
 
-  dig: .long 0
+  var: .long 0
   zece: .long 10
+
+  varArr: .long 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF
 
 .text
 
@@ -25,13 +27,40 @@ readInput:
   popl %ebx
   ret
 
-# WIP
+# Pops the number then the variable from the top of the stack and assigns to the variable the value
 let:
+  popl %ebx
+  popl %ecx
+  lea varArr, %eax
+  movl %ebx, (%eax, %ecx, 4)
+
   pushl returnMemoryAddress
   ret
 
-# WIP
+# Computes the number of the letter and puts it in var
+varToInt:
+  mov currInstruction, %edi
+  xor %ecx, %ecx
+  xor %ebx, %ebx
+  movb (%edi, %ecx, 1), %bl
+  sub $97, %ebx # 'a' = 97
+  movl %ebx, var
+  ret
+
+# Pushes the letter value on the stack
+pushLetter:
+  pushl var
+  pushl returnMemoryAddress
+  ret
+
+# Check if a variable is already defined and puts its value on the stack
 variable:
+  call varToInt
+  movl var, %ecx
+  lea varArr, %eax
+  cmp $0xFFFFFFFF, (%eax, %ecx, 4)
+  je pushLetter
+  pushl (%eax, %ecx, 4)
   pushl returnMemoryAddress
   ret
 
