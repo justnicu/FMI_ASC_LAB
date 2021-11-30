@@ -1,6 +1,7 @@
 .data
   scanfFormat: .asciz "%[^\n]"
   printfFormat: .asciz "%d "
+  printfNewLine: .asciz "\n"
 
   chDelim: .asciz " "
 
@@ -415,8 +416,8 @@ main:
 
 # System call to end the process
 exit:
-  pushl stdout
-  call fflush
+  pushl $printfNewLine
+  call printf
   popl %ebx
   movl $1, %eax
   xor %ebx, %ebx
