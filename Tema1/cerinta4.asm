@@ -1,6 +1,6 @@
 .data
   scanfFormat: .asciz "%[^\n]"
-  printfFormat: .asciz "alo %d\n"
+  printfFormat: .asciz "%d \n"
 
   chDelim: .asciz " "
 
@@ -39,9 +39,11 @@ divLoop:
   popl %ebx
   xor %edx, %edx
   movl (%edi, %ecx, 4), %eax
+  cdq
   idiv %ebx
   movl %eax, (%edi, %ecx, 4)
   pushl %ebx
+  jmp divLoop
 
 # Multiply the matrix by the value on stack
 mulLoop:
@@ -54,6 +56,7 @@ mulLoop:
   imull %ebx
   movl %eax, (%edi, %ecx, 4)
   pushl %ebx
+  jmp mulLoop
 
 # Subtract from the matrix the value on stack
 subLoop:
@@ -63,6 +66,7 @@ subLoop:
   popl %ebx
   subl %ebx, (%edi, %ecx, 4)
   pushl %ebx
+  jmp subLoop
 
 # Add to the matrix the value on stack
 addLoop:
@@ -72,24 +76,21 @@ addLoop:
   popl %ebx
   addl %ebx, (%edi, %ecx, 4)
   pushl %ebx
+  jmp addLoop
 
 # Takes the integers from the stack and puts them in the matrix
 letLoop:
   cmp $0, %ecx
-  je exitOpLoop
+  je exitOpLoopLet
   popl %ebx
   dec %ecx
   movl %ebx, (%edi, %ecx, 4)
   jmp letLoop
 
-# Push a value on stack so we can pop something when we exit
-let:
-  pushl $0
-  jmp letLoop
-
 # Exits from the operation loop
 exitOpLoop:
   popl %ebx
+exitOpLoopLet:
   pushl returnMemoryAddress
   ret
 
@@ -175,7 +176,7 @@ execute:
   xor %ebx, %ebx
   call instructionToDec
   cmp $108, %eax # 'l' = 108
-  je let
+  je letLoop
   cmp $97, %eax # 'a' = 97
   je addLoop
   cmp $115, %eax # 's' = 115
@@ -261,7 +262,7 @@ writeLoop:
   subl %ecx, %eax
 
   movl %ecx, aux
-
+debug:
   pushl (%edi, %eax, 4)
   pushl $printfFormat
   call printf
