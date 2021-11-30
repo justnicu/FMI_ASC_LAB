@@ -1,6 +1,6 @@
 .data
   scanfFormat: .asciz "%[^\n]"
-  printfFormat: .asciz "%d \n"
+  printfFormat: .asciz "%d "
 
   chDelim: .asciz " "
 
@@ -260,17 +260,13 @@ writeLoop:
   movl nrElements, %eax
   dec %eax
   subl %ecx, %eax
-
   movl %ecx, aux
-debug:
   pushl (%edi, %eax, 4)
   pushl $printfFormat
   call printf
   popl %ebx
   popl %ebx
-
   movl aux, %ecx
-
   jmp writeLoop
 
 # Writes the matrix
@@ -287,6 +283,9 @@ main:
 
 # System call to end the process
 exit:
+  pushl stdout
+  call fflush
+  popl %ebx
   movl $1, %eax
   xor %ebx, %ebx
   int $0x80
