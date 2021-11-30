@@ -13,6 +13,16 @@
   nrRotations: .long 0
   nrElements: .long 0
 
+  i: .long 0
+  j: .long 0
+
+  p0: .long 0 # defined as i * k0
+  p1: .long 0 # defined as j * k1
+
+  k0: .long 0
+  k1: .long 0
+  k2: .long 0
+
   sign: .long 1
 
   zece: .long 10
@@ -251,15 +261,45 @@ startSolve:
   call matrixInit
   jmp solve
 
+# Resets the j coordinate and increments the i coordinate
+resetj:
+  movl i, %eax
+  inc %eax
+  movl %eax, i
+  movl $0, j
+  ret
+
+# Updates the values of i and j
+updateCoord:
+  movl j, %eax
+  inc %eax
+  cmp nrColumns, %eax
+  movl %eax, j
+  je resetj
+  ret
+
 # WIP
 writeLoop:
   cmp $0, %ecx
   je exit
   dec %ecx
 
-  movl nrElements, %eax
-  dec %eax
-  subl %ecx, %eax
+  movl k0, %eax
+  movl i, %ebx
+  xor %edx, %edx
+  imull %ebx
+  movl %eax, p0
+
+  movl k1, %eax
+  movl j, %ebx
+  xor %edx, %edx
+  imull %ebx
+  movl %eax, p1
+
+  movl k2, %eax
+  addl p1, %eax
+  addl p0, %eax
+debug:
   movl %ecx, aux
   pushl (%edi, %eax, 4)
   pushl $printfFormat
@@ -267,10 +307,96 @@ writeLoop:
   popl %ebx
   popl %ebx
   movl aux, %ecx
+  call updateCoord
   jmp writeLoop
+
+# Swaps the values of nrLines and nrColumns
+swapLC:
+  movl nrLines, %eax
+  movl %eax, aux
+  movl nrColumns, %eax
+  movl %eax, nrLines
+  movl aux, %eax
+  movl %eax, nrColumns
+  ret
+
+# Updates the k values for 0 rotations
+rotation0:
+  movl nrColumns, %eax
+  movl %eax, k0
+  movl $1, %eax
+  movl %eax, k1
+  movl $0, %eax
+  movl %eax, k2
+  ret
+
+# Updates the k values for 1 rotation
+rotation1:
+  call swapLC
+  movl $1, %eax
+  movl %eax, k0
+  movl nrLines, %eax
+  xor %edx, %edx
+  movl $-1, %ebx
+  imull %ebx
+  movl %eax, k1
+  movl nrColumns, %eax
+  dec %eax
+  movl nrLines, %ebx
+  xor %edx, %edx
+  imull %ebx
+  movl %eax, k2
+  ret
+
+# Updates the k values for 2 rotations
+rotation2:
+  movl nrColumns, %eax
+  xor %edx, %edx
+  movl $-1, %ebx
+  imull %ebx
+  movl %eax, k0
+  movl $-1, %eax
+  movl %eax, k1
+  movl nrColumns, %eax
+  movl nrLines, %ebx
+  xor %edx, %edx
+  imull %ebx
+  dec %eax
+  movl %eax, k2
+  ret
+
+# Updates the k values for 3 rotations
+rotation3:
+  call swapLC
+  movl $-1, %eax
+  movl %eax, k0
+  movl nrLines, %eax
+  movl %eax, k1
+  movl nrLines, %eax
+  dec %eax
+  movl %eax, k2
+  ret
+
+# Updates the k values used in the formula used to find the position in memory for a certain coordinate (i, j) in the matrix
+updateKValues:
+  movl nrRotations, %eax
+  cmp $0, %eax
+  je rotation0
+  cmp $1, %eax
+  je rotation1
+  cmp $2, %eax
+  je rotation2
+  cmp $3, %eax
+  je rotation3
 
 # Writes the matrix
 writeOutput:
+  xor %edx, %edx
+  movl nrRotations, %eax
+  movl $4, %ebx
+  divl %ebx
+  movl %edx, nrRotations
+  call updateKValues
   call operationInit
   movl %ecx, nrElements
   jmp writeLoop
