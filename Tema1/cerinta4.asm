@@ -283,23 +283,19 @@ writeLoop:
   cmp $0, %ecx
   je exit
   dec %ecx
-
   movl k0, %eax
   movl i, %ebx
   xor %edx, %edx
   imull %ebx
   movl %eax, p0
-
   movl k1, %eax
   movl j, %ebx
   xor %edx, %edx
   imull %ebx
   movl %eax, p1
-
   movl k2, %eax
   addl p1, %eax
   addl p0, %eax
-debug:
   movl %ecx, aux
   pushl (%edi, %eax, 4)
   pushl $printfFormat
@@ -397,6 +393,16 @@ writeOutput:
   divl %ebx
   movl %edx, nrRotations
   call updateKValues
+  pushl nrLines
+  pushl $printfFormat
+  call printf
+  popl %ebx
+  popl %ebx
+  pushl nrColumns
+  pushl $printfFormat
+  call printf
+  popl %ebx
+  popl %ebx
   call operationInit
   movl %ecx, nrElements
   jmp writeLoop
